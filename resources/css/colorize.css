@@ -15,6 +15,7 @@ span.paren3:hover { color : inherit; background-color : #FFFFBA; }
 span.paren4:hover { color : inherit; background-color : #CACAFF; }
 span.paren5:hover { color : inherit; background-color : #CAFFCA; }
 span.paren6:hover { color : inherit; background-color : #FFBAFF; }
+span.variable { color : #AA00AA; background-color : inherit; }
 
 .code {
     background-color: #eee;

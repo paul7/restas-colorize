@@ -8,14 +8,16 @@ a.symbol:hover { color : #229955; background-color : transparent; text-decoratio
 .comment { color : #007777; background-color : inherit; }
 .string { color : #777777; background-color : inherit; }
 .character { color : #0055AA; background-color : inherit; }
+.variable { color : #AA00AA; background-color : inherit; }
 .syntaxerror { color : #FF0000; background-color : inherit; }
+.diff-added { color : inherit; background-color : #AAFFAA; }
+.diff-deleted { color : inherit; background-color : #FFAAAA }
 span.paren1:hover { color : inherit; background-color : #BAFFFF; }
 span.paren2:hover { color : inherit; background-color : #FFCACA; }
 span.paren3:hover { color : inherit; background-color : #FFFFBA; }
 span.paren4:hover { color : inherit; background-color : #CACAFF; }
 span.paren5:hover { color : inherit; background-color : #CAFFCA; }
 span.paren6:hover { color : inherit; background-color : #FFBAFF; }
-span.variable { color : #AA00AA; background-color : inherit; }
 
 .code {
     background-color: #eee;

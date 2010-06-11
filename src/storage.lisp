@@ -13,6 +13,8 @@
 
 (defgeneric storage-count-pastes (storage))
 
+(defgeneric storage-list-all-pastes (storage))
+
 (defgeneric storage-list-pastes (storage offset limit))
 
 (defgeneric storage-get-paste (storage id))
@@ -38,10 +40,13 @@
    (last-id :initform 0)))
 
 (defmethod storage-count-pastes ((storage memory-storage))
-  (length (slot-value storage 'pastes)))
+  (length (storage-list-all-pastes storage)))
+
+(defmethod storage-list-all-pastes ((storage memory-storage))
+  (slot-value storage 'pastes))
 
 (defmethod storage-list-pastes ((storage memory-storage) offset limit)
-  (let* ((pastes (slot-value storage 'pastes))
+  (let* ((pastes (storage-list-all-pastes storage))
          (len (length pastes))
          (end (+ limit offset)))
     (if (and (not (minusp offset))
@@ -65,11 +70,63 @@
         (slot-value storage 'pastes))
   paste)
 
-(defmethod storage-remove-paste (storage id)
+(defmethod storage-remove-paste ((storage memory-storage) id)
   (setf (slot-value storage 'pastes)
         (remove id
                 (slot-value storage 'pastes)
                 :key #'(lambda (paste) (getf paste :id)))))
 
+(defparameter *storage-dir* (merge-pathnames "stor/"
+					     (asdf:component-pathname 
+					      (asdf:find-system '#:restas-colorize))))
+
+(defparameter *storage-wildcard* (merge-pathnames "*" *storage-dir*))
+
+(ensure-directories-exist *storage-dir*)
+
+(defun id->path (id)
+  (merge-pathnames (format nil "~a" id) *storage-dir*))
+
+(defun path->id (path)
+  (parse-integer (file-namestring path) :junk-allowed t))
+
+(defun paste-file-ids ()
+  (remove-if-not #'integerp (mapcar #'path->id
+				  (directory *storage-wildcard*))))
+(defun last-file-id ()
+  (apply #'max (paste-file-ids)))
+
+(defclass file-storage (memory-storage)
+  ())
+
+(defun load-paste (id)
+  (make-instance 'paste 
+		 :id id 
+		 :author "none"
+		 :lang "REFAL"
+		 :code "here be dragons"
+		 :title id))
+
+(defgeneric storage-reset (storage))
+
+(defmethod storage-reset ((storage file-storage))
+  (setf (slot-value storage 'last-id) 
+	0)
+  (setf (slot-value storage 'pastes) 
+	nil)
+  (mapc #'(lambda (id)
+	    (storage-add-paste storage (load-paste id)))
+	(paste-file-ids)))
+
+(defmethod initialize-instance :after ((storage file-storage) &key)
+  (storage-reset storage))
+
+(defmethod storage-add-paste ((storage file-storage) paste)
+  (call-next-method))
+
+(defmethod storage-remove-paste ((storage file-storage) id)
+  (call-next-method))
+
 (setf *storage*
-      (make-instance 'memory-storage))
+      (make-instance 'file-storage))
+

@@ -71,14 +71,16 @@
 
 (restas:define-route view-paste (":id"
                                  :parse-vars (list :id #'parse-integer))
-  (let* ((paste (storage-get-paste *storage* id))
-         (lang (paste-lang paste)))
-    (list* :title (paste-title paste)
-           :code (colorize::html-colorization (or (find-symbol lang :keyword)
-                                                  (error "Unknow coloring type: ~A" lang))
-                                              (paste-code paste))
-           :lang (paste-lang paste)
-           (paste-plist/short paste))))
+  (let ((paste (storage-get-paste *storage* id)))
+    (if paste
+	(let ((lang (paste-lang paste)))
+	  (list* :title (paste-title paste)
+		 :code (colorize::html-colorization (or (find-symbol lang :keyword)
+							(error "Unknow coloring type: ~A" lang))
+						    (paste-code paste))
+		 :lang (paste-lang paste)
+		 (paste-plist/short paste)))
+	hunchentoot:+http-not-found+)))
 
 (restas:define-route create-paste ("create")
   (list :langs (langs-plist)
@@ -91,7 +93,7 @@
         (lang (hunchentoot:post-parameter "lang")))
     (list :langs (langs-plist)
           :preview (colorize::html-colorization (or (find-symbol lang :keyword)
-                                                    (error "Unknow coloring type: ~A" lang))
+                                                    (error "Unknown coloring type: ~A" lang))
                                                 code)
           :title (hunchentoot:post-parameter "title")
           :author (colorize-user)

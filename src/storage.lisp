@@ -65,7 +65,7 @@
   (setf (slot-value paste 'id)
         (incf (slot-value storage 'last-id)))
   (setf (slot-value paste 'date)
-        (local-time:now))
+        (pretty-time (local-time:now)))
   (push paste
         (slot-value storage 'pastes))
   paste)
@@ -100,12 +100,29 @@
   ())
 
 (defun load-paste (id)
-  (make-instance 'paste 
-		 :id id 
-		 :author "none"
-		 :lang "REFAL"
-		 :code "here be dragons"
-		 :title id))
+  (with-open-file (fs (id->path id))
+    (let ((saved (read fs)))
+      (make-instance 'paste 
+		     :id (getf saved :id)
+		     :author (getf saved :author)
+		     :lang (getf saved :lang)
+		     :code (getf saved :code)
+		     :title (getf saved :title)
+		     :date (getf saved :date)))))
+
+(defun store-paste (paste)
+  (with-slots (id author lang code title date) paste
+    (let ((saved (list :id id
+		       :author author
+		       :lang lang
+		       :code code
+		       :title title
+		       :date date)))
+      (with-open-file (fs (id->path (paste-id paste)) 
+			  :direction :output
+			  :if-exists :supersede
+			  :if-does-not-exist :create)
+	(format fs "~S" saved)))))
 
 (defgeneric storage-reset (storage))
 
@@ -115,17 +132,18 @@
   (setf (slot-value storage 'pastes) 
 	nil)
   (mapc #'(lambda (id)
-	    (storage-add-paste storage (load-paste id)))
+	    (incf (slot-value storage 'last-id))
+	    (push (load-paste id)
+		  (slot-value storage 'pastes)))
 	(paste-file-ids)))
 
 (defmethod initialize-instance :after ((storage file-storage) &key)
   (storage-reset storage))
 
-(defmethod storage-add-paste ((storage file-storage) paste)
-  (call-next-method))
+(defmethod storage-add-paste :after ((storage file-storage) paste)
+  (store-paste paste))
 
-(defmethod storage-remove-paste ((storage file-storage) id)
-  (call-next-method))
+(defmethod storage-remove-paste :after ((storage file-storage) id))
 
 (setf *storage*
       (make-instance 'file-storage))

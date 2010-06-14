@@ -7,6 +7,15 @@
 
 (in-package #:restas.colorize)
 
+(defun pretty-time (timestamp)
+  (format nil "~a/~a/~a ~2,1,0,'0@a:~2,1,0,'0@a:~2,1,0,'0@a" 
+	  (local-time:timestamp-year timestamp)
+	  (local-time:timestamp-month timestamp)
+	  (local-time:timestamp-day timestamp)
+	  (local-time:timestamp-hour timestamp)
+	  (local-time:timestamp-minute timestamp)
+	  (local-time:timestamp-second timestamp)))
+
 (restas:define-default-render-method (obj)
   (closure-template.standard:xhtml-strict-frame
    (list :title (getf obj :title)
@@ -24,7 +33,7 @@
 
 (defun paste-plist/short (paste)
   (list :href (restas:genurl 'view-paste :id (paste-id paste))
-        :date (local-time:format-timestring nil (paste-date paste))
+        :date (paste-date paste)
         :title (paste-title paste)
         :author (paste-author paste)))
 
@@ -108,7 +117,7 @@
     (if author
         (restas:redirect 'view-paste
                          :id (paste-id (storage-add-paste *storage*
-                                                  (make-instance  'paste
+							  (make-instance  'paste
                                                                   :code (hunchentoot:post-parameter "code")
                                                                   :author author
                                                                   :lang (hunchentoot:post-parameter "lang")

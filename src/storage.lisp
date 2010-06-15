@@ -127,15 +127,14 @@
 (defgeneric storage-reset (storage))
 
 (defmethod storage-reset ((storage file-storage))
-  (setf (slot-value storage 'last-id) 
-	0)
   (setf (slot-value storage 'pastes) 
 	nil)
   (mapc #'(lambda (id)
-	    (incf (slot-value storage 'last-id))
 	    (push (load-paste id)
 		  (slot-value storage 'pastes)))
-	(paste-file-ids)))
+	(paste-file-ids))
+  (setf (slot-value storage 'last-id) (last-file-id)))
+  
 
 (defmethod initialize-instance :after ((storage file-storage) &key)
   (storage-reset storage))
